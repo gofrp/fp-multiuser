@@ -1,0 +1,21 @@
+export GO111MODULE=on
+LDFLAGS := -s -w
+
+all: build
+
+build: app
+
+app:
+	env CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -o ./release/fp-multiuser-darwin-amd64 ./cmd/fp-multiuser
+	env CGO_ENABLED=0 GOOS=freebsd GOARCH=386 go build -ldflags "$(LDFLAGS)" -o ./release/fp-multiuser-freebsd-386 ./cmd/fp-multiuser
+	env CGO_ENABLED=0 GOOS=freebsd GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -o ./release/fp-multiuser-freebsd-amd64 ./cmd/fp-multiuser
+	env CGO_ENABLED=0 GOOS=linux GOARCH=386 go build -ldflags "$(LDFLAGS)" -o ./release/fp-multiuser-linux-386 ./cmd/fp-multiuser
+	env CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -o ./release/fp-multiuser-linux-amd64 ./cmd/fp-multiuser
+	env CGO_ENABLED=0 GOOS=linux GOARCH=arm go build -ldflags "$(LDFLAGS)" -o ./release/fp-multiuser-linux-arm ./cmd/fp-multiuser
+	env CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags "$(LDFLAGS)" -o ./release/fp-multiuser-linux-arm64 ./cmd/fp-multiuser
+	env CGO_ENABLED=0 GOOS=windows GOARCH=386 go build -ldflags "$(LDFLAGS)" -o ./release/fp-multiuser-windows-386.exe ./cmd/fp-multiuser
+	env CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -o ./release/fp-multiuser-windows-amd64.exe ./cmd/fp-multiuser
+	env CGO_ENABLED=0 GOOS=linux GOARCH=mips64 go build -ldflags "$(LDFLAGS)" -o ./release/fp-multiuser-linux-mips64 ./cmd/fp-multiuser
+	env CGO_ENABLED=0 GOOS=linux GOARCH=mips64le go build -ldflags "$(LDFLAGS)" -o ./release/fp-multiuser-linux-mips64le ./cmd/fp-multiuser
+	env CGO_ENABLED=0 GOOS=linux GOARCH=mips GOMIPS=softfloat go build -ldflags "$(LDFLAGS)" -o ./release/fp-multiuser-linux-mips ./cmd/fp-multiuser
+	env CGO_ENABLED=0 GOOS=linux GOARCH=mipsle GOMIPS=softfloat go build -ldflags "$(LDFLAGS)" -o ./release/fp-multiuser-linux-mipsle ./cmd/fp-multiuser
