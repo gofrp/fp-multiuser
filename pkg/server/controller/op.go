@@ -34,7 +34,10 @@ func (c *OpController) HandleLogin(ctx *gin.Context) (interface{}, error) {
 
 	var res plugin.Response
 	token := content.Metas["token"]
-	if c.tokens[content.User] == token {
+	if content.User == "" || token == "" {
+		res.Reject = true
+		res.RejectReason = "user or meta token can not be empty"
+	} else if c.tokens[content.User] == token {
 		res.Unchange = true
 	} else {
 		res.Reject = true
