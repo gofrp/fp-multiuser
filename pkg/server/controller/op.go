@@ -3,7 +3,7 @@ package controller
 import (
 	"net/http"
 
-	plugin "github.com/fatedier/frp/models/plugin/server"
+	plugin "github.com/fatedier/frp/pkg/plugin/server"
 	"github.com/gin-gonic/gin"
 )
 
