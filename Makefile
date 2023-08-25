@@ -1,6 +1,6 @@
 export GO111MODULE=on
 
-all: fp-multiuser
+all: frps-multiuser
 
-fp-multiuser:
-	go build -o ./bin/fp-multiuser ./cmd/fp-multiuser
+frps-multiuser:
+	go build -o ./bin/frps-multiuser ./cmd/fp-multiuser
