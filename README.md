@@ -18,7 +18,7 @@ frps-multiuser will run as one single process and accept HTTP requests from frps
 
 ### Download
 
-Download frps-multiuser binary file from [Release](/releases).
+Download frps-multiuser binary file from [Release](releases).
 
 ### Requirements
 
