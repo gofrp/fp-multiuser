@@ -18,7 +18,7 @@ frps-multiuser 会以一个单独的进程运行，并接收 frps 发送过来�
 
 ### 下载
 
-通过 [Release](/releases) 页面下载对应系统版本的二进制文件到本地。
+通过 [Release](../../releases) 页面下载对应系统版本的二进制文件到本地。
 
 ### 要求
 
