@@ -3,7 +3,7 @@ LDFLAGS := -s -w
 
 copy: all
 	cp ./config/frps-multiuser.ini ./release/frps-multiuser.ini
-	cp -r ./assets ./release/assets
+	cp -r ./assets/ ./release/assets/
 
 all: build
 
