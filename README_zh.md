@@ -6,7 +6,11 @@ frps-multiuser 是 [frp](https://github.com/fatedier/frp) 的一个服务端插�
 
 frps-multiuser 会以一个单独的进程运行，并接收 frps 发送过来的 HTTP 请求。
 
-**由[fp-multiuser](https://github.com/gofrp/fp-multiuser)进行修改，作以下修改**
+![用户列表](screenshots/user-list.png)
+![新增列表](screenshots/new-user.png)
+![支持英文](screenshots/i18n.png)
+
+## 更新说明
 
 + **配置文件改为ini格式，便于增加注释**
 + **删除-l参数，其需要的配置由`frps-multiuser.ini`决定**

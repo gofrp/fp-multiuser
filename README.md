@@ -4,7 +4,11 @@ frp server plugin to support multiple users for [frp](https://github.com/fatedie
 
 frps-multiuser will run as one single process and accept HTTP requests from frps.
 
-**modify by [fp-multiuser](https://github.com/gofrp/fp-multiuser)**
+![用户列表](screenshots/user-list.png)
+![新增列表](screenshots/new-user.png)
+![支持英文](screenshots/i18n.png)
+
+## update notes
 
 + **the default tokens file is frps-multiuser.ini now,ini file support comment**
 + **remove `-l`,it configure in `frps-multiuser.ini` now**
