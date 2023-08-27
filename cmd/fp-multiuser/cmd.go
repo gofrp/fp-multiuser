@@ -2,31 +2,26 @@ package main
 
 import (
 	"errors"
-	"fmt"
+	"github.com/gofrp/fp-multiuser/pkg/server"
+	"github.com/gofrp/fp-multiuser/pkg/server/controller"
+	"github.com/spf13/cobra"
 	"gopkg.in/ini.v1"
 	"io/fs"
 	"log"
 	"os"
-	"strings"
-
-	"github.com/gofrp/fp-multiuser/pkg/server"
-
-	"github.com/spf13/cobra"
+	"strconv"
 )
 
 const version = "0.0.2"
 
 var (
 	showVersion bool
-
-	bindAddr  string
-	tokenFile string
+	configFile  string
 )
 
 func init() {
-	rootCmd.PersistentFlags().BoolVarP(&showVersion, "version", "v", false, "version")
-	rootCmd.PersistentFlags().StringVarP(&bindAddr, "bind_addr", "l", "127.0.0.1:7200", "bind address")
-	rootCmd.PersistentFlags().StringVarP(&tokenFile, "token_file", "c", "./tokens.ini", "token file")
+	rootCmd.PersistentFlags().BoolVarP(&showVersion, "version", "v", false, "version of frps-multiuser")
+	rootCmd.PersistentFlags().StringVarP(&configFile, "config", "c", "./frps-multiuser.ini", "config file of frps-multiuser")
 }
 
 var rootCmd = &cobra.Command{
@@ -34,17 +29,19 @@ var rootCmd = &cobra.Command{
 	Short: "frps-multiuser is the server plugin of frp to support multiple users.",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if showVersion {
-			fmt.Println(version)
+			log.Println(version)
 			return nil
 		}
-		tokens, err := ParseTokensFromFile(tokenFile)
+		common, tokens, iniFile, err := ParseConfigFile(configFile)
 		if err != nil {
-			log.Printf("fail to start frps-multiuser")
+			log.Printf("fail to start frps-multiuser : %v", err)
 			return nil
 		}
-		s, err := server.New(server.Config{
-			BindAddress: bindAddr,
-			Tokens:      tokens,
+		s, err := server.New(controller.HandleController{
+			CommonInfo: common,
+			Tokens:     tokens,
+			ConfigFile: configFile,
+			IniFile:    iniFile,
 		})
 		if err != nil {
 			return err
@@ -63,10 +60,11 @@ func Execute() {
 	}
 }
 
-func ParseTokensFromFile(file string) (map[string]string, error) {
-	ret := make(map[string]string)
+func ParseConfigFile(file string) (controller.CommonInfo, map[string]controller.TokenInfo, *ini.File, error) {
+	ret := make(map[string]controller.TokenInfo)
+	common := controller.CommonInfo{}
 
-	i, err := ini.LoadSources(ini.LoadOptions{
+	iniFile, err := ini.LoadSources(ini.LoadOptions{
 		Insensitive:         false,
 		InsensitiveSections: false,
 		InsensitiveKeys:     false,
@@ -80,19 +78,55 @@ func ParseTokensFromFile(file string) (map[string]string, error) {
 		} else {
 			log.Printf("fail to parse token file %s : %v", file, err)
 		}
-		return nil, err
+		return common, nil, iniFile, err
 	}
 
-	t, err := i.GetSection("user")
+	commonSection, err := iniFile.GetSection("common")
 	if err != nil {
-		log.Printf("fail to parse token file %s : %v", file, err)
-		return nil, err
+		log.Printf("fail to get [common] section from file %s : %v", file, err)
+		return common, nil, iniFile, err
+	}
+	pluginAddr := commonSection.Key("plugin_addr").Value()
+	if len(pluginAddr) != 0 {
+		common.PluginAddr = pluginAddr
+	} else {
+		common.PluginAddr = "0.0.0.0"
+	}
+	pluginPort := commonSection.Key("plugin_port").Value()
+	if len(pluginPort) != 0 {
+		port, err := strconv.Atoi(pluginPort)
+		if err != nil {
+			return common, nil, iniFile, err
+		}
+		common.PluginPort = port
+	} else {
+		common.PluginPort = 7200
+	}
+	common.User = commonSection.Key("admin_user").Value()
+	common.Pwd = commonSection.Key("admin_pwd").Value()
+
+	userSection, err := iniFile.GetSection("user")
+	if err != nil {
+		log.Printf("fail to get [user] section from file %s : %v", file, err)
+		return common, nil, iniFile, err
 	}
 
-	keys := t.Keys()
+	disabledSection, err := iniFile.GetSection("disabled")
+	if err != nil {
+		log.Printf("fail to get [disabled] section from file %s : %v", file, err)
+		return common, nil, iniFile, err
+	}
+
+	keys := userSection.Keys()
 	for _, key := range keys {
-		ret[strings.TrimSpace(key.Name())] = strings.TrimSpace(key.Value())
+		var token = controller.TokenInfo{
+			User:    key.Name(),
+			Token:   key.Value(),
+			Comment: key.Comment,
+			Status:  !(disabledSection.HasKey(key.Name()) && disabledSection.Key(key.Name()).Value() == "disable"),
+		}
+		ret[token.User] = token
 	}
 
-	return ret, nil
+	return common, ret, iniFile, nil
 }

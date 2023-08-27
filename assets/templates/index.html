@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<head>
+    <title>${ .UserManage }</title>
+    <link rel="stylesheet" href="./static/layui/css/layui.css">
+    <link rel="stylesheet" href="./static/css/index.css">
+    <script src="./static/layui/layui.js"></script>
+    <script src="./static/js/index.js"></script>
+</head>
+<body>
+<form class="layui-form layui-row layui-col-space16" id="searchForm" lay-filter="searchForm">
+    <div class="layui-col-md3">
+        <div class="layui-input-wrap">
+            <div class="layui-input-prefix">
+                <i class="layui-icon layui-icon-username"></i>
+            </div>
+            <input type="text" name="user" value="" placeholder="${ .User }" class="layui-input" lay-affix="clear">
+        </div>
+    </div>
+    <div class="layui-col-md3">
+        <div class="layui-input-wrap">
+            <div class="layui-input-prefix">
+                <i class="layui-icon layui-icon-vercode"></i>
+            </div>
+            <input type="text" name="token" placeholder="${ .Token }" class="layui-input" lay-affix="clear">
+        </div>
+    </div>
+    <div class="layui-col-md3">
+        <div class="layui-input-wrap">
+            <div class="layui-input-prefix">
+                <i class="layui-icon layui-icon-note"></i>
+            </div>
+            <input type="text" name="comment" placeholder="${ .Notes }" class="layui-input" lay-affix="clear">
+        </div>
+    </div>
+    <div class="layui-col-md3">
+        <div class="layui-btn-container">
+            <button class="layui-btn layui-btn-sm" id="searchBtn">${ .Search }</button>
+            <button class="layui-btn layui-btn-sm layui-btn-primary" type="reset" id="resetBtn">${ .Reset }</button>
+        </div>
+    </div>
+</form>
+<table id="tokenTable" lay-filter="tokenTable"></table>
+<script type="text/html" id="toolbarTemplate">
+    <div class="layui-btn-container">
+        <button class="layui-btn layui-btn-sm" lay-event="add">${ .NewUser }</button>
+        <button class="layui-btn layui-btn-sm" lay-event="remove">${ .RemoveUser }</button>
+        <button class="layui-btn layui-btn-sm" lay-event="disable">${ .DisableUser }</button>
+        <button class="layui-btn layui-btn-sm" lay-event="enable">${ .EnableUser }</button>
+    </div>
+</script>
+<script type="text/html" id="operationTemplate">
+    <div class="layui-clear-space">
+        <a class="layui-btn layui-btn-xs" lay-event="remove">${ .Remove }</a>
+        {{# if (d.status) { }}
+        <a class="layui-btn layui-btn-xs" lay-event="disable">${ .Disable }</a>
+        {{# } else { }}
+        <a class="layui-btn layui-btn-xs" lay-event="enable">${ .Enable }</a>
+        {{# } }}
+    </div>
+</script>
+<script type="text/html" id="addTemplate">
+    <div class="layui-form" id="addUserForm" lay-filter="addUserForm">
+        <div class="layui-form-item">
+            <label class="layui-form-label">${ .User }</label>
+            <div class="layui-input-block">
+                <input type="text" name="user" placeholder="${ .PleaseInputUserAccount }" autocomplete="off" class="layui-input"
+                       lay-verify="required">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">${ .Token }</label>
+            <div class="layui-input-block">
+                <input type="text" name="token" lay-verify="required" placeholder="${ .PleaseInputUserToken }"
+                       class="layui-input"
+                       autocomplete="off">
+            </div>
+        </div>
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">${ .Notes }</label>
+            <div class="layui-input-block">
+                <textarea name="comment" placeholder="${ .PleaseInputUserNotes }" autocomplete="off" class="layui-textarea"></textarea>
+            </div>
+        </div>
+    </div>
+</script>
+</body>
+</html>

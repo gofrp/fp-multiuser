@@ -1,0 +1,34 @@
+body {
+    padding: 15px;
+}
+
+#searchForm input {
+    height: 30px;
+    line-height: 28px;
+}
+
+#searchForm .layui-input-suffix,
+#searchForm .layui-input-prefix {
+    line-height: 30px;
+    padding: 0;
+}
+
+#addUserForm {
+    padding: 15px;
+}
+
+.layui-form-label {
+    width: 140px;
+}
+
+.layui-input-block {
+    margin-left: 170px;
+}
+
+.layui-btn-sm{
+    line-height: 28px;
+}
+
+.layui-btn-xs{
+    line-height: 20px;
+}
