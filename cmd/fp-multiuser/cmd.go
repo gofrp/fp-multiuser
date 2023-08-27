@@ -105,7 +105,7 @@ func ParseConfigFile(file string) (controller.CommonInfo, map[string]controller.
 	common.User = commonSection.Key("admin_user").Value()
 	common.Pwd = commonSection.Key("admin_pwd").Value()
 
-	userSection, err := iniFile.GetSection("user")
+	usersSection, err := iniFile.GetSection("users")
 	if err != nil {
 		log.Printf("fail to get [user] section from file %s : %v", file, err)
 		return common, nil, iniFile, err
@@ -117,7 +117,7 @@ func ParseConfigFile(file string) (controller.CommonInfo, map[string]controller.
 		return common, nil, iniFile, err
 	}
 
-	keys := userSection.Keys()
+	keys := usersSection.Keys()
 	for _, key := range keys {
 		var token = controller.TokenInfo{
 			User:    key.Name(),

@@ -1,6 +1,7 @@
 export GO111MODULE=on
 
 copy:
+	mkdir ./bin
 	cp ./config/frps-multiuser.ini ./bin/frps-multiuser.ini
 	cp -r ./assets/ ./bin/assets/
 
