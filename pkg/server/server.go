@@ -5,6 +5,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"errors"
+	"fmt"
 	ginI18n "github.com/gin-contrib/i18n"
 	"github.com/gin-gonic/gin"
 	"github.com/gofrp/fp-multiuser/pkg/server/controller"
@@ -12,6 +13,7 @@ import (
 	"log"
 	"net"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -69,12 +71,49 @@ func (s *Server) init() error {
 	return nil
 }
 
+func LoadSupportLanguage(dir string) ([]language.Tag, error) {
+	var tags []language.Tag
+
+	files, err := os.Open(dir)
+	if err != nil {
+		log.Printf("error opening directory: %v", err)
+		return tags, err
+	}
+
+	fileList, err := files.Readdir(-1)
+	if err != nil {
+		log.Printf("error reading directory: %v", err)
+		return tags, err
+	}
+
+	err = files.Close()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, file := range fileList {
+		name, _ := strings.CutSuffix(file.Name(), ".json")
+		parsedLang, _ := language.Parse(name)
+		tags = append(tags, parsedLang)
+	}
+
+	if len(tags) == 0 {
+		return tags, fmt.Errorf("not found any language file in directory: %v", dir)
+	}
+
+	return tags, nil
+}
+
 func GinI18nLocalize() gin.HandlerFunc {
-	acceptLanguage := []language.Tag{language.Chinese, language.English}
+	dir := "./assets/lang"
+	tags, err := LoadSupportLanguage(dir)
+	if err != nil {
+		log.Panicf("language file is not found: %v", err)
+	}
 	return ginI18n.Localize(
 		ginI18n.WithBundle(&ginI18n.BundleCfg{
-			RootPath:         "./assets/lang",
-			AcceptLanguage:   acceptLanguage,
+			RootPath:         dir,
+			AcceptLanguage:   tags,
 			DefaultLanguage:  language.Chinese,
 			FormatBundleFile: "json",
 			UnmarshalFunc:    json.Unmarshal,
@@ -82,15 +121,11 @@ func GinI18nLocalize() gin.HandlerFunc {
 		ginI18n.WithGetLngHandle(
 			func(context *gin.Context, defaultLng string) string {
 				header := context.GetHeader("Accept-Language")
-				lang := strings.Split(strings.Split(header, ";")[0], ",")
-				for _, tag := range acceptLanguage {
-					if len(lang) == 1 && tag.String() == lang[0] {
-						return lang[0]
-					} else if len(lang) == 2 && tag.String() == lang[1] {
-						return lang[1]
-					}
+				lang, _, err := language.ParseAcceptLanguage(header)
+				if err != nil {
+					return defaultLng
 				}
-				return defaultLng
+				return lang[0].String()
 			},
 		),
 	)
