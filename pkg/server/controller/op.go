@@ -188,7 +188,7 @@ func (c *HandleController) JudgePort(content *plugin.NewProxyContent) plugin.Res
 				}
 			}
 			if !domainAllowed {
-				portErr = fmt.Errorf("user [%v] domain %v is not allowed", user, userDomains)
+				portErr = fmt.Errorf("user [%v] domain [%v] is not allowed", user, strings.Join(userDomains, ","))
 				reject = true
 			}
 		}
