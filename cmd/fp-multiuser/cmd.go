@@ -114,7 +114,7 @@ func ParseConfigFile(file string) (controller.CommonInfo, map[string]controller.
 
 	usersSection, err := iniFile.GetSection("users")
 	if err != nil {
-		log.Printf("fail to get [user] section from file %s : %v", file, err)
+		log.Printf("fail to get [users] section from file %s : %v", file, err)
 		return common, nil, nil, nil, nil, iniFile, err
 	}
 

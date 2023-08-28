@@ -3,6 +3,7 @@ package controller
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	plugin "github.com/fatedier/frp/pkg/plugin/server"
 	ginI18n "github.com/gin-contrib/i18n"
 	"github.com/gin-gonic/gin"
@@ -283,10 +284,10 @@ func (c *HandleController) MakeAddTokenFunc() func(context *gin.Context) {
 			return
 		}
 		if _, exist := c.Tokens[token.User]; exist {
-			log.Printf("add failed, user %v exist", token.User)
+			log.Printf("add failed, user [%v] exist", token.User)
 			response.Success = false
 			response.Code = UserExist
-			response.Message = "add failed, user " + token.User + " exist "
+			response.Message = fmt.Sprintf("add failed, user [%s] exist ", token.User)
 			context.JSON(http.StatusOK, &response)
 			return
 		}
@@ -424,7 +425,7 @@ func (c *HandleController) MakeDisableTokensFunc() func(context *gin.Context) {
 				context.JSON(http.StatusOK, &response)
 				return
 			}
-			key.Comment = "disable user '" + user.User + "'"
+			key.Comment = fmt.Sprintf("disable user '%s'", user.User)
 		}
 
 		err = c.IniFile.SaveTo(c.ConfigFile)

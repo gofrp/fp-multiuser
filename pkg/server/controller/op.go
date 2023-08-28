@@ -92,18 +92,18 @@ func (c *HandleController) JudgeToken(user string, token string) plugin.Response
 	} else if info, exist := c.Tokens[user]; exist {
 		if !info.Status {
 			res.Reject = true
-			res.RejectReason = "user " + user + " is disabled"
+			res.RejectReason = fmt.Sprintf("user [%s] is disabled", user)
 		} else {
 			if info.Token != token {
 				res.Reject = true
-				res.RejectReason = "invalid meta token for user " + user + ""
+				res.RejectReason = fmt.Sprintf("invalid meta token for user [%s]", user)
 			} else {
 				res.Unchange = true
 			}
 		}
 	} else {
 		res.Reject = true
-		res.RejectReason = "user " + user + " not exist"
+		res.RejectReason = fmt.Sprintf("user [%s] not exist", user)
 	}
 
 	return res
@@ -119,7 +119,7 @@ func (c *HandleController) JudgePort(content *plugin.NewProxyContent) plugin.Res
 	proxyType := content.ProxyType
 
 	if StringIndexOf(proxyType, supportProxyTypes) == -1 {
-		log.Printf("proxy type %v not support, plugin do nothing", proxyType)
+		log.Printf("proxy type [%v] not support, plugin do nothing", proxyType)
 		res.Unchange = true
 		return res
 	}
@@ -137,17 +137,17 @@ func (c *HandleController) JudgePort(content *plugin.NewProxyContent) plugin.Res
 				if strings.Contains(port, "-") {
 					allowedRanges := strings.Split(port, "-")
 					if len(allowedRanges) != 2 {
-						portErr = fmt.Errorf("port range format error: %v", port)
+						portErr = fmt.Errorf("user [%v] port range [%v] format error", user, port)
 						break
 					}
 					start, err := strconv.Atoi(strings.TrimSpace(allowedRanges[0]))
 					if err != nil {
-						portErr = fmt.Errorf("start port is not a number: %v", err)
+						portErr = fmt.Errorf("user [%v] port rang [%v] start port [%v] is not a number", user, port, allowedRanges[0])
 						break
 					}
 					end, err := strconv.Atoi(strings.TrimSpace(allowedRanges[1]))
 					if err != nil {
-						portErr = fmt.Errorf("end port is not a number: %v", err)
+						portErr = fmt.Errorf("user [%v] port rang [%v] end port [%v] is not a number", user, port, allowedRanges[0])
 						break
 					}
 					if max(userPort, start) == userPort && min(userPort, end) == userPort {
@@ -157,7 +157,7 @@ func (c *HandleController) JudgePort(content *plugin.NewProxyContent) plugin.Res
 				} else {
 					allowed, err := strconv.Atoi(port)
 					if err != nil {
-						portErr = fmt.Errorf("allowed port is not a number: %v", err)
+						portErr = fmt.Errorf("user [%v] allowed port [%v] is not a number", user, port)
 					}
 					if allowed == userPort {
 						portAllowed = true
@@ -171,7 +171,7 @@ func (c *HandleController) JudgePort(content *plugin.NewProxyContent) plugin.Res
 	}
 	if !portAllowed {
 		if portErr == nil {
-			portErr = fmt.Errorf("user %v port %v is not allowed", user, userPort)
+			portErr = fmt.Errorf("user [%v] port [%v] is not allowed", user, userPort)
 		}
 		reject = true
 	}
@@ -188,7 +188,7 @@ func (c *HandleController) JudgePort(content *plugin.NewProxyContent) plugin.Res
 				}
 			}
 			if !domainAllowed {
-				portErr = fmt.Errorf("user %v domain %v is not allowed", user, userDomains)
+				portErr = fmt.Errorf("user [%v] domain %v is not allowed", user, userDomains)
 				reject = true
 			}
 		}
@@ -209,7 +209,7 @@ func (c *HandleController) JudgePort(content *plugin.NewProxyContent) plugin.Res
 				subdomainAllowed = true
 			}
 			if !subdomainAllowed {
-				portErr = fmt.Errorf("user %v subdomain %v is not allowed", user, userSubdomain)
+				portErr = fmt.Errorf("user [%v] subdomain [%v] is not allowed", user, userSubdomain)
 				reject = true
 			}
 		}
