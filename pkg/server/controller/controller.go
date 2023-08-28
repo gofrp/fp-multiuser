@@ -110,23 +110,23 @@ func (c *HandleController) MakeHandlerFunc() gin.HandlerFunc {
 		if request.Op == "Login" {
 			content := plugin.LoginContent{}
 			err = json.Unmarshal(jsonStr, &content)
-			response, err = c.HandleLogin(&content)
+			response = c.HandleLogin(&content)
 		} else if request.Op == "NewProxy" {
 			content := plugin.NewProxyContent{}
 			err = json.Unmarshal(jsonStr, &content)
-			response, err = c.HandleNewProxy(&content)
+			response = c.HandleNewProxy(&content)
 		} else if request.Op == "Ping" {
 			content := plugin.PingContent{}
 			err = json.Unmarshal(jsonStr, &content)
-			response, err = c.HandlePing(&content)
+			response = c.HandlePing(&content)
 		} else if request.Op == "NewWorkConn" {
 			content := plugin.NewWorkConnContent{}
 			err = json.Unmarshal(jsonStr, &content)
-			response, err = c.HandleNewWorkConn(&content)
+			response = c.HandleNewWorkConn(&content)
 		} else if request.Op == "NewUserConn" {
 			content := plugin.NewUserConnContent{}
 			err = json.Unmarshal(jsonStr, &content)
-			response, err = c.HandleNewUserConn(&content)
+			response = c.HandleNewUserConn(&content)
 		}
 
 		if err != nil {

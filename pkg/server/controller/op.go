@@ -1,14 +1,20 @@
 package controller
 
 import (
+	"fmt"
 	plugin "github.com/fatedier/frp/pkg/plugin/server"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/ini.v1"
+	"strconv"
+	"strings"
 )
 
 type HandleController struct {
 	CommonInfo CommonInfo
 	Tokens     map[string]TokenInfo
+	Ports      map[string][]string
+	Domains    map[string][]string
+	Subdomains map[string][]string
 	ConfigFile string
 	IniFile    *ini.File
 }
@@ -41,37 +47,41 @@ func (c *HandleController) Register(engine *gin.Engine) {
 	group.POST("/enable", c.MakeEnableTokensFunc())
 }
 
-func (c *HandleController) HandleLogin(content *plugin.LoginContent) (plugin.Response, error) {
+func (c *HandleController) HandleLogin(content *plugin.LoginContent) plugin.Response {
 	token := content.Metas["token"]
 	user := content.User
 	return c.JudgeToken(user, token)
 }
 
-func (c *HandleController) HandleNewProxy(content *plugin.NewProxyContent) (plugin.Response, error) {
+func (c *HandleController) HandleNewProxy(content *plugin.NewProxyContent) plugin.Response {
+	token := content.User.Metas["token"]
+	user := content.User.User
+	judgeToken := c.JudgeToken(user, token)
+	if judgeToken.Reject {
+		return judgeToken
+	}
+	return c.JudgePort(content)
+}
+
+func (c *HandleController) HandlePing(content *plugin.PingContent) plugin.Response {
 	token := content.User.Metas["token"]
 	user := content.User.User
 	return c.JudgeToken(user, token)
 }
 
-func (c *HandleController) HandlePing(content *plugin.PingContent) (plugin.Response, error) {
+func (c *HandleController) HandleNewWorkConn(content *plugin.NewWorkConnContent) plugin.Response {
 	token := content.User.Metas["token"]
 	user := content.User.User
 	return c.JudgeToken(user, token)
 }
 
-func (c *HandleController) HandleNewWorkConn(content *plugin.NewWorkConnContent) (plugin.Response, error) {
+func (c *HandleController) HandleNewUserConn(content *plugin.NewUserConnContent) plugin.Response {
 	token := content.User.Metas["token"]
 	user := content.User.User
 	return c.JudgeToken(user, token)
 }
 
-func (c *HandleController) HandleNewUserConn(content *plugin.NewUserConnContent) (plugin.Response, error) {
-	token := content.User.Metas["token"]
-	user := content.User.User
-	return c.JudgeToken(user, token)
-}
-
-func (c *HandleController) JudgeToken(user string, token string) (plugin.Response, error) {
+func (c *HandleController) JudgeToken(user string, token string) plugin.Response {
 	var res plugin.Response
 	if len(c.Tokens) == 0 {
 		res.Unchange = true
@@ -94,5 +104,105 @@ func (c *HandleController) JudgeToken(user string, token string) (plugin.Respons
 		res.Reject = true
 		res.RejectReason = "user " + user + " not exist"
 	}
-	return res, nil
+	return res
+}
+
+func (c *HandleController) JudgePort(content *plugin.NewProxyContent) plugin.Response {
+	var res plugin.Response
+	var portErr error
+	var reject = false
+	user := content.User.User
+	userPort := content.RemotePort
+	userDomains := content.CustomDomains
+	userSubdomain := content.SubDomain
+
+	portAllowed := false
+	if _, exist := c.Ports[user]; exist {
+		for _, port := range c.Ports[user] {
+			if strings.Contains(port, "-") {
+				allowedRanges := strings.Split(port, "-")
+				if len(allowedRanges) != 2 {
+					portErr = fmt.Errorf("port range format error: %v", port)
+				}
+				start, err := strconv.Atoi(strings.TrimSpace(allowedRanges[0]))
+				if err != nil {
+					portErr = fmt.Errorf("start port is not a number: %v", err)
+				}
+				end, err := strconv.Atoi(strings.TrimSpace(allowedRanges[1]))
+				if err != nil {
+					portErr = fmt.Errorf("end port is not a number: %v", err)
+				}
+				if max(userPort, start) == userPort && min(userPort, end) == userPort {
+					portAllowed = true
+					break
+				}
+			} else {
+				allowed, err := strconv.Atoi(port)
+				if err != nil {
+					portErr = fmt.Errorf("end port is not a number: %v", err)
+				}
+				if allowed == userPort {
+					portAllowed = true
+					break
+				}
+			}
+		}
+	} else {
+		portAllowed = true
+	}
+	if !portAllowed {
+		portErr = fmt.Errorf("user %v port %v is not allowed", user, userPort)
+		reject = true
+	}
+
+	domainAllowed := true
+	if portAllowed {
+		if _, exist := c.Domains[user]; exist {
+			for _, userDomain := range userDomains {
+				if StringIndexOf(userDomain, c.Domains[user]) == -1 {
+					domainAllowed = false
+					break
+				}
+			}
+		}
+		if !domainAllowed {
+			portErr = fmt.Errorf("user %v domain %v is not allowed", user, userDomains)
+			reject = true
+		}
+	}
+
+	subdomainAllowed := false
+	if portAllowed && domainAllowed {
+		if _, exist := c.Subdomains[user]; exist {
+			for _, subdomain := range c.Subdomains[user] {
+				if subdomain == userSubdomain {
+					subdomainAllowed = true
+					break
+				}
+			}
+		} else {
+			subdomainAllowed = true
+		}
+		if !subdomainAllowed {
+			portErr = fmt.Errorf("user %v subdomain %v is not allowed", user, userSubdomain)
+			reject = true
+		}
+	}
+
+	if reject {
+		res.Reject = true
+		res.RejectReason = portErr.Error()
+	} else {
+		res.Unchange = true
+	}
+	return res
+}
+
+func StringIndexOf(element string, data []string) int {
+	for k, v := range data {
+		if element == v {
+			return k
+		}
+	}
+	return -1
 }
