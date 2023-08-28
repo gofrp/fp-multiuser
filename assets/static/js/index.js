@@ -25,7 +25,7 @@ $(function () {
             cols: [[
                 {type: 'checkbox'},
                 {field: 'user', title: lang['User'], width: 150, sort: true},
-                {field: 'token', title: lang['Token'], width: 150, sort: true, edit: true},
+                {field: 'token', title: lang['Token'], width: 200, sort: true, edit: true},
                 {field: 'comment', title: lang['Notes'], sort: true, edit: 'textarea'},
                 {field: 'ports', title: lang['AllowedPorts'], sort: true, edit: 'textarea'},
                 {field: 'domains', title: lang['AllowedDomains'], sort: true, edit: 'textarea'},
@@ -282,10 +282,13 @@ $(function () {
          */
         function operate(type, data, index) {
             var url;
+            var extendMessage = '';
             if (type === apiType.Remove) {
                 url = "/remove";
+                extendMessage = ', ' + lang['RemoveUser'] + lang['TakeTimeMakeEffective'];
             } else if (type === apiType.Disable) {
                 url = "/disable";
+                extendMessage = ', ' + lang['RemoveUser'] + lang['TakeTimeMakeEffective'];
             } else if (type === apiType.Enable) {
                 url = "/enable";
             } else {
@@ -304,7 +307,7 @@ $(function () {
                     if (result.success) {
                         reloadTable();
                         layui.layer.close(index);
-                        layui.layer.msg(lang['OperateSuccess'], function (index) {
+                        layui.layer.msg(lang['OperateSuccess'] + extendMessage, function (index) {
                             layui.layer.close(index);
                         });
                     } else {
