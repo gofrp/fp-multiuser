@@ -37,10 +37,13 @@ type CommonInfo struct {
 }
 
 type TokenInfo struct {
-	User    string `json:"user" form:"user"`
-	Token   string `json:"token" form:"token"`
-	Comment string `json:"comment" form:"comment"`
-	Status  bool   `json:"status" form:"status"`
+	User       string `json:"user" form:"user"`
+	Token      string `json:"token" form:"token"`
+	Comment    string `json:"comment" form:"comment"`
+	Ports      string `json:"ports" from:"ports"`
+	Domains    string `json:"domains" from:"domains"`
+	Subdomains string `json:"subdomains" from:"subdomains"`
+	Status     bool   `json:"status" form:"status"`
 }
 
 type TokenResponse struct {
@@ -152,22 +155,28 @@ func (c *HandleController) MakeHandlerFunc() gin.HandlerFunc {
 func (c *HandleController) MakeManagerFunc() func(context *gin.Context) {
 	return func(context *gin.Context) {
 		context.HTML(http.StatusOK, "index.html", gin.H{
-			"UserManage":             ginI18n.MustGetMessage(context, "User Manage"),
-			"User":                   ginI18n.MustGetMessage(context, "User"),
-			"Token":                  ginI18n.MustGetMessage(context, "Token"),
-			"Notes":                  ginI18n.MustGetMessage(context, "Notes"),
-			"Search":                 ginI18n.MustGetMessage(context, "Search"),
-			"Reset":                  ginI18n.MustGetMessage(context, "Reset"),
-			"NewUser":                ginI18n.MustGetMessage(context, "New User"),
-			"RemoveUser":             ginI18n.MustGetMessage(context, "Remove User"),
-			"DisableUser":            ginI18n.MustGetMessage(context, "Disable User"),
-			"EnableUser":             ginI18n.MustGetMessage(context, "Enable User"),
-			"Remove":                 ginI18n.MustGetMessage(context, "Remove"),
-			"Enable":                 ginI18n.MustGetMessage(context, "Enable"),
-			"Disable":                ginI18n.MustGetMessage(context, "Disable"),
-			"PleaseInputUserAccount": ginI18n.MustGetMessage(context, "Please Input User Account"),
-			"PleaseInputUserToken":   ginI18n.MustGetMessage(context, "Please Input User Token"),
-			"PleaseInputUserNotes":   ginI18n.MustGetMessage(context, "Please Input User Notes"),
+			"UserManage":                   ginI18n.MustGetMessage(context, "User Manage"),
+			"User":                         ginI18n.MustGetMessage(context, "User"),
+			"Token":                        ginI18n.MustGetMessage(context, "Token"),
+			"Notes":                        ginI18n.MustGetMessage(context, "Notes"),
+			"Search":                       ginI18n.MustGetMessage(context, "Search"),
+			"Reset":                        ginI18n.MustGetMessage(context, "Reset"),
+			"NewUser":                      ginI18n.MustGetMessage(context, "New User"),
+			"RemoveUser":                   ginI18n.MustGetMessage(context, "Remove User"),
+			"DisableUser":                  ginI18n.MustGetMessage(context, "Disable User"),
+			"EnableUser":                   ginI18n.MustGetMessage(context, "Enable User"),
+			"Remove":                       ginI18n.MustGetMessage(context, "Remove"),
+			"Enable":                       ginI18n.MustGetMessage(context, "Enable"),
+			"Disable":                      ginI18n.MustGetMessage(context, "Disable"),
+			"PleaseInputUserAccount":       ginI18n.MustGetMessage(context, "Please Input User Account"),
+			"PleaseInputUserToken":         ginI18n.MustGetMessage(context, "Please Input User Token"),
+			"PleaseInputUserNotes":         ginI18n.MustGetMessage(context, "Please Input User Notes"),
+			"AllowedPorts":                 ginI18n.MustGetMessage(context, "Allowed Ports"),
+			"PleaseInputAllowedPorts":      ginI18n.MustGetMessage(context, "Please Input Allowed Ports"),
+			"AllowedDomains":               ginI18n.MustGetMessage(context, "Allowed Domains"),
+			"PleaseInputAllowedDomains":    ginI18n.MustGetMessage(context, "Please Input Allowed Domains"),
+			"AllowedSubdomains":            ginI18n.MustGetMessage(context, "Allowed Subdomains"),
+			"PleaseInputAllowedSubdomains": ginI18n.MustGetMessage(context, "Please Input Allowed Subdomains"),
 		})
 	}
 }
@@ -196,6 +205,9 @@ func (c *HandleController) MakeLangFunc() func(context *gin.Context) {
 			"ShouldCheckUser":    ginI18n.MustGetMessage(context, "Please Check at least One User"),
 			"OperationConfirm":   ginI18n.MustGetMessage(context, "Operation Confirm"),
 			"EmptyData":          ginI18n.MustGetMessage(context, "Empty Data"),
+			"AllowedPorts":       ginI18n.MustGetMessage(context, "Allowed Ports"),
+			"AllowedDomains":     ginI18n.MustGetMessage(context, "Allowed Domains"),
+			"AllowedSubdomains":  ginI18n.MustGetMessage(context, "Allowed Subdomains"),
 		})
 	}
 }
@@ -266,44 +278,61 @@ func filter(main TokenInfo, sub TokenInfo) bool {
 
 func (c *HandleController) MakeAddTokenFunc() func(context *gin.Context) {
 	return func(context *gin.Context) {
-		token := TokenInfo{
+		info := TokenInfo{
 			Status: true,
 		}
 		response := OperationResponse{
 			Success: true,
 			Code:    Success,
-			Message: "add success",
+			Message: "user add success",
 		}
-		err := context.BindJSON(&token)
+		err := context.BindJSON(&info)
 		if err != nil {
-			log.Printf("add failed, param error : %v", err)
+			log.Printf("user add failed, param error : %v", err)
 			response.Success = false
 			response.Code = ParamError
-			response.Message = "add failed, param error "
+			response.Message = "user add failed, param error "
 			context.JSON(http.StatusOK, &response)
 			return
 		}
-		if _, exist := c.Tokens[token.User]; exist {
-			log.Printf("add failed, user [%v] exist", token.User)
+		if _, exist := c.Tokens[info.User]; exist {
+			log.Printf("user add failed, user [%v] exist", info.User)
 			response.Success = false
 			response.Code = UserExist
-			response.Message = fmt.Sprintf("add failed, user [%s] exist ", token.User)
+			response.Message = fmt.Sprintf("user add failed, user [%s] exist ", info.User)
 			context.JSON(http.StatusOK, &response)
 			return
 		}
-		token.Comment = ";" + token.Comment
-		c.Tokens[token.User] = token
+		c.Tokens[info.User] = info
 
-		section, _ := c.IniFile.GetSection("users")
-		key, err := section.NewKey(token.User, token.Token)
-		key.Comment = token.Comment
+		usersSection, _ := c.IniFile.GetSection("users")
+		key, err := usersSection.NewKey(info.User, info.Token)
+		key.Comment = info.Comment
+
+		if len(strings.TrimSpace(info.Ports)) != 0 {
+			portsSection, _ := c.IniFile.GetSection("ports")
+			key, err = portsSection.NewKey(info.User, info.Ports)
+			key.Comment = fmt.Sprintf("user %s allowed ports", info.User)
+		}
+
+		if len(strings.TrimSpace(info.Domains)) != 0 {
+			domainsSection, _ := c.IniFile.GetSection("domains")
+			key, err = domainsSection.NewKey(info.User, info.Domains)
+			key.Comment = fmt.Sprintf("user %s allowed domains", info.User)
+		}
+
+		if len(strings.TrimSpace(info.Subdomains)) != 0 {
+			subdomainsSection, _ := c.IniFile.GetSection("subdomains")
+			key, err = subdomainsSection.NewKey(info.User, info.Subdomains)
+			key.Comment = fmt.Sprintf("user %s allowed subdomains", info.User)
+		}
 
 		err = c.IniFile.SaveTo(c.ConfigFile)
 		if err != nil {
 			log.Printf("add failed, error : %v", err)
 			response.Success = false
 			response.Code = SaveError
-			response.Message = "add failed"
+			response.Message = "user add failed"
 			context.JSON(http.StatusOK, &response)
 			return
 		}
@@ -317,7 +346,7 @@ func (c *HandleController) MakeUpdateTokensFunc() func(context *gin.Context) {
 		response := OperationResponse{
 			Success: true,
 			Code:    Success,
-			Message: "update success",
+			Message: "user update success",
 		}
 		update := TokenUpdate{}
 		err := context.BindJSON(&update)
@@ -325,7 +354,7 @@ func (c *HandleController) MakeUpdateTokensFunc() func(context *gin.Context) {
 			log.Printf("update failed, param error : %v", err)
 			response.Success = false
 			response.Code = ParamError
-			response.Message = "update failed, param error "
+			response.Message = "user update failed, param error "
 			context.JSON(http.StatusOK, &response)
 			return
 		}
@@ -335,17 +364,47 @@ func (c *HandleController) MakeUpdateTokensFunc() func(context *gin.Context) {
 
 		c.Tokens[after.User] = after
 
-		section, _ := c.IniFile.GetSection("users")
-		key, err := section.GetKey(before.User)
+		usersSection, _ := c.IniFile.GetSection("users")
+		key, err := usersSection.GetKey(before.User)
 		key.Comment = after.Comment
 		key.SetValue(after.Token)
 
+		if before.Ports != after.Ports {
+			portsSection, _ := c.IniFile.GetSection("ports")
+			if len(strings.TrimSpace(after.Ports)) != 0 {
+				key, err = portsSection.NewKey(after.User, after.Ports)
+				key.Comment = fmt.Sprintf("user %s allowed ports", after.User)
+			} else {
+				portsSection.DeleteKey(after.User)
+			}
+		}
+
+		if before.Domains != after.Domains && len(strings.TrimSpace(after.Domains)) != 0 {
+			domainsSection, _ := c.IniFile.GetSection("domains")
+			if len(strings.TrimSpace(after.Domains)) != 0 {
+				key, err = domainsSection.NewKey(after.User, after.Domains)
+				key.Comment = fmt.Sprintf("user %s allowed domains", after.User)
+			} else {
+				domainsSection.DeleteKey(after.User)
+			}
+		}
+
+		if before.Subdomains != after.Subdomains && len(strings.TrimSpace(after.Subdomains)) != 0 {
+			subdomainsSection, _ := c.IniFile.GetSection("subdomains")
+			if len(strings.TrimSpace(after.Subdomains)) != 0 {
+				key, err = subdomainsSection.NewKey(after.User, after.Subdomains)
+				key.Comment = fmt.Sprintf("user %s allowed subdomains", after.User)
+			} else {
+				subdomainsSection.DeleteKey(after.User)
+			}
+		}
+
 		err = c.IniFile.SaveTo(c.ConfigFile)
 		if err != nil {
-			log.Printf("update failed, error : %v", err)
+			log.Printf("user update failed, error : %v", err)
 			response.Success = false
 			response.Code = SaveError
-			response.Message = "update failed"
+			response.Message = "user update failed"
 			context.JSON(http.StatusOK, &response)
 			return
 		}
@@ -359,31 +418,49 @@ func (c *HandleController) MakeRemoveTokensFunc() func(context *gin.Context) {
 		response := OperationResponse{
 			Success: true,
 			Code:    Success,
-			Message: "remove success",
+			Message: "user remove success",
 		}
 		remove := TokenRemove{}
 		err := context.BindJSON(&remove)
 		if err != nil {
-			log.Printf("remove failed, param error : %v", err)
+			log.Printf("user remove failed, param error : %v", err)
 			response.Success = false
 			response.Code = ParamError
-			response.Message = "remove failed, param error "
+			response.Message = "user remove failed, param error "
 			context.JSON(http.StatusOK, &response)
 			return
 		}
 
-		section, _ := c.IniFile.GetSection("users")
+		usersSection, _ := c.IniFile.GetSection("users")
 		for _, user := range remove.Users {
 			delete(c.Tokens, user.User)
-			section.DeleteKey(user.User)
+			usersSection.DeleteKey(user.User)
+		}
+
+		portsSection, _ := c.IniFile.GetSection("ports")
+		for _, user := range remove.Users {
+			delete(c.Ports, user.User)
+			portsSection.DeleteKey(user.User)
+		}
+
+		domainsSection, _ := c.IniFile.GetSection("domains")
+		for _, user := range remove.Users {
+			delete(c.Domains, user.User)
+			domainsSection.DeleteKey(user.User)
+		}
+
+		subdomainsSection, _ := c.IniFile.GetSection("subdomains")
+		for _, user := range remove.Users {
+			delete(c.Subdomains, user.User)
+			subdomainsSection.DeleteKey(user.User)
 		}
 
 		err = c.IniFile.SaveTo(c.ConfigFile)
 		if err != nil {
-			log.Printf("remove failed, error : %v", err)
+			log.Printf("user remove failed, error : %v", err)
 			response.Success = false
 			response.Code = SaveError
-			response.Message = "remove failed"
+			response.Message = "user remove failed"
 			context.JSON(http.StatusOK, &response)
 			return
 		}

@@ -24,9 +24,12 @@ $(function () {
             text: {none: lang['EmptyData']},
             cols: [[
                 {type: 'checkbox'},
-                {field: 'user', title: lang['User'], width: 200, sort: true},
-                {field: 'token', title: lang['Token'], width: 250, sort: true, edit: true},
+                {field: 'user', title: lang['User'], width: 150, sort: true},
+                {field: 'token', title: lang['Token'], width: 150, sort: true, edit: true},
                 {field: 'comment', title: lang['Notes'], sort: true, edit: 'textarea'},
+                {field: 'ports', title: lang['AllowedPorts'], sort: true, edit: 'textarea'},
+                {field: 'domains', title: lang['AllowedDomains'], sort: true, edit: 'textarea'},
+                {field: 'subdomains', title: lang['AllowedSubdomains'], sort: true, edit: 'textarea'},
                 {
                     field: 'status',
                     title: lang['Status'],
@@ -34,14 +37,8 @@ $(function () {
                     templet: '<span>{{d.status? "' + lang['Enable'] + '":"' + lang['Disable'] + '"}}</span>',
                     sort: true
                 },
-                {title: lang['Operation'], width: 140, toolbar: '#operationTemplate'}
-            ]],
-            parseData: function (res) {
-                res.data.forEach(function (data) {
-                    if (data.comment != null && data.comment !== '')
-                        data.comment = data.comment.substring(1);
-                });
-            }
+                {title: lang['Operation'], width: 150, toolbar: '#operationTemplate'}
+            ]]
         });
 
         layui.table.on('edit(tokenTable)', function (obj) {
@@ -49,7 +46,7 @@ $(function () {
             var value = obj.value;
             var oldValue = obj.oldValue;
             var before = $.extend(true, {}, obj.data);
-            var after = {};
+            var after = $.extend(true, {}, obj.data);
             if (field === 'token') {
                 if (value.trim() === '') {
                     layui.layer.msg(lang['TokenEmpty'])
@@ -58,16 +55,19 @@ $(function () {
                 }
 
                 before.token = oldValue;
-
-                after.user = before.user;
                 after.token = value;
-                after.comment = before.comment;
             } else if (field === 'comment') {
                 before.comment = oldValue;
-
-                after.user = before.user;
-                after.token = before.token;
                 after.comment = value;
+            } else if (field === 'ports') {
+                before.ports = oldValue;
+                after.ports = value;
+            } else if (field === 'domains') {
+                before.domains = oldValue;
+                after.domains = value;
+            } else if (field === 'subdomains') {
+                before.subdomains = oldValue;
+                after.subdomains = value;
             }
 
             update(before, after);

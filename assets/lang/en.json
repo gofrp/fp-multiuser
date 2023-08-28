@@ -31,5 +31,11 @@
   "Token Can't be Empty": "Token Can't be Empty",
   "Please Check at least One User": "Please Check at least One User",
   "Operation Confirm": "Operation Confirm",
-  "Empty Data": "Empty Data"
+  "Empty Data": "Empty Data",
+  "Allowed Ports": "Allowed Ports",
+  "Please Input Allowed Ports": "Please Input Allowed Ports, Example: 8081, 9000-9010",
+  "Allowed Domains": "Allowed Domains",
+  "Please Input Allowed Domains": "Please Input Allowed Domains, Example: web01.domain.com,web02.domain.com",
+  "Allowed Subdomains": "Allowed Subdomains",
+  "Please Input Allowed Subdomains": "Please Input Allowed Subdomains, Example: web01,web02"
 }

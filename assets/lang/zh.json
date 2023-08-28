@@ -1,7 +1,7 @@
 {
   "User Manage": "用户管理",
-  "User": "用户名（user）",
-  "Token": "Token（meta_token）",
+  "User": "用户名(user)",
+  "Token": "Token(meta_token)",
   "Notes": "备注",
   "Search": "搜索",
   "Reset": "重置",
@@ -12,8 +12,8 @@
   "Remove": "删除",
   "Disable": "禁用",
   "Enable": "启用",
-  "Please Input User Account": "请输入用户名（user）",
-  "Please Input User Token": "请输入Token（meta_token）",
+  "Please Input User Account": "请输入用户名(user)",
+  "Please Input User Token": "请输入Token(meta_token)",
   "Please Input User Notes": "请输入备注",
   "Status": "状态",
   "Operation": "操作",
@@ -31,5 +31,11 @@
   "Token Can't be Empty": "Token 不能为空",
   "Please Check at least One User": "请选中需要操作的用户",
   "Operation Confirm": "操作确认",
-  "Empty Data": "无数据"
+  "Empty Data": "无数据",
+  "Allowed Ports": "允许端口",
+  "Please Input Allowed Ports": "请输入允许使用的端口,如:8081, 9000-9010",
+  "Allowed Domains": "允许域名",
+  "Please Input Allowed Domains": "请输入允许使用的域名,如:web01.domain.com,web02.domain.com",
+  "Allowed Subdomains": "允许子域名",
+  "Please Input Allowed Subdomains": "请输入允许使用的端口,如:web01,web02"
 }

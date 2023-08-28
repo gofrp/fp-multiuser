@@ -112,29 +112,6 @@ func ParseConfigFile(file string) (controller.CommonInfo, map[string]controller.
 	common.User = commonSection.Key("admin_user").Value()
 	common.Pwd = commonSection.Key("admin_pwd").Value()
 
-	usersSection, err := iniFile.GetSection("users")
-	if err != nil {
-		log.Printf("fail to get [users] section from file %s : %v", file, err)
-		return common, nil, nil, nil, nil, iniFile, err
-	}
-
-	disabledSection, err := iniFile.GetSection("disabled")
-	if err != nil {
-		log.Printf("fail to get [disabled] section from file %s : %v", file, err)
-		return common, nil, nil, nil, nil, iniFile, err
-	}
-
-	keys := usersSection.Keys()
-	for _, key := range keys {
-		token := controller.TokenInfo{
-			User:    key.Name(),
-			Token:   key.Value(),
-			Comment: key.Comment,
-			Status:  !(disabledSection.HasKey(key.Name()) && disabledSection.Key(key.Name()).Value() == "disable"),
-		}
-		users[token.User] = token
-	}
-
 	portsSection, err := iniFile.GetSection("ports")
 	if err != nil {
 		log.Printf("fail to get [ports] section from file %s : %v", file, err)
@@ -169,6 +146,36 @@ func ParseConfigFile(file string) (controller.CommonInfo, map[string]controller.
 		value := key.Value()
 		subdomain := strings.Split(strings.Replace(value, " ", "", -1), ",")
 		subdomains[user] = subdomain
+	}
+
+	usersSection, err := iniFile.GetSection("users")
+	if err != nil {
+		log.Printf("fail to get [users] section from file %s : %v", file, err)
+		return common, nil, nil, nil, nil, iniFile, err
+	}
+
+	disabledSection, err := iniFile.GetSection("disabled")
+	if err != nil {
+		log.Printf("fail to get [disabled] section from file %s : %v", file, err)
+		return common, nil, nil, nil, nil, iniFile, err
+	}
+
+	keys := usersSection.Keys()
+	for _, key := range keys {
+		comment, found := strings.CutPrefix(key.Comment, ";")
+		if !found {
+			comment, found = strings.CutPrefix(comment, "#")
+		}
+		token := controller.TokenInfo{
+			User:       key.Name(),
+			Token:      key.Value(),
+			Comment:    comment,
+			Ports:      strings.Join(ports[key.Name()], ","),
+			Domains:    strings.Join(domains[key.Name()], ","),
+			Subdomains: strings.Join(subdomains[key.Name()], ","),
+			Status:     !(disabledSection.HasKey(key.Name()) && disabledSection.Key(key.Name()).Value() == "disable"),
+		}
+		users[token.User] = token
 	}
 
 	return common, users, ports, domains, subdomains, iniFile, nil
