@@ -5,6 +5,7 @@ import (
 	plugin "github.com/fatedier/frp/pkg/plugin/server"
 	"github.com/gin-gonic/gin"
 	"gopkg.in/ini.v1"
+	"log"
 	"strconv"
 	"strings"
 )
@@ -104,6 +105,7 @@ func (c *HandleController) JudgeToken(user string, token string) plugin.Response
 		res.Reject = true
 		res.RejectReason = "user " + user + " not exist"
 	}
+
 	return res
 }
 
@@ -111,47 +113,61 @@ func (c *HandleController) JudgePort(content *plugin.NewProxyContent) plugin.Res
 	var res plugin.Response
 	var portErr error
 	var reject = false
+	supportProxyTypes := []string{
+		"tcp", "tcpmux", "udp", "http", "https",
+	}
+	proxyType := content.ProxyType
+
+	if StringIndexOf(proxyType, supportProxyTypes) == -1 {
+		log.Printf("proxy type %v not support, plugin do nothing", proxyType)
+		res.Unchange = true
+		return res
+	}
+
 	user := content.User.User
 	userPort := content.RemotePort
 	userDomains := content.CustomDomains
 	userSubdomain := content.SubDomain
 
-	portAllowed := false
-	if _, exist := c.Ports[user]; exist {
-		for _, port := range c.Ports[user] {
-			if strings.Contains(port, "-") {
-				allowedRanges := strings.Split(port, "-")
-				if len(allowedRanges) != 2 {
-					portErr = fmt.Errorf("port range format error: %v", port)
-					break
-				}
-				start, err := strconv.Atoi(strings.TrimSpace(allowedRanges[0]))
-				if err != nil {
-					portErr = fmt.Errorf("start port is not a number: %v", err)
-					break
-				}
-				end, err := strconv.Atoi(strings.TrimSpace(allowedRanges[1]))
-				if err != nil {
-					portErr = fmt.Errorf("end port is not a number: %v", err)
-					break
-				}
-				if max(userPort, start) == userPort && min(userPort, end) == userPort {
-					portAllowed = true
-					break
-				}
-			} else {
-				allowed, err := strconv.Atoi(port)
-				if err != nil {
-					portErr = fmt.Errorf("allowed port is not a number: %v", err)
-				}
-				if allowed == userPort {
-					portAllowed = true
-					break
+	portAllowed := true
+	if proxyType == "tcp" || proxyType == "udp" {
+		portAllowed = false
+		if _, exist := c.Ports[user]; exist {
+			for _, port := range c.Ports[user] {
+				if strings.Contains(port, "-") {
+					allowedRanges := strings.Split(port, "-")
+					if len(allowedRanges) != 2 {
+						portErr = fmt.Errorf("port range format error: %v", port)
+						break
+					}
+					start, err := strconv.Atoi(strings.TrimSpace(allowedRanges[0]))
+					if err != nil {
+						portErr = fmt.Errorf("start port is not a number: %v", err)
+						break
+					}
+					end, err := strconv.Atoi(strings.TrimSpace(allowedRanges[1]))
+					if err != nil {
+						portErr = fmt.Errorf("end port is not a number: %v", err)
+						break
+					}
+					if max(userPort, start) == userPort && min(userPort, end) == userPort {
+						portAllowed = true
+						break
+					}
+				} else {
+					allowed, err := strconv.Atoi(port)
+					if err != nil {
+						portErr = fmt.Errorf("allowed port is not a number: %v", err)
+					}
+					if allowed == userPort {
+						portAllowed = true
+						break
+					}
 				}
 			}
+		} else {
+			portAllowed = true
 		}
-	} else {
-		portAllowed = true
 	}
 	if !portAllowed {
 		if portErr == nil {
@@ -161,36 +177,41 @@ func (c *HandleController) JudgePort(content *plugin.NewProxyContent) plugin.Res
 	}
 
 	domainAllowed := true
-	if portAllowed {
-		if _, exist := c.Domains[user]; exist {
-			for _, userDomain := range userDomains {
-				if StringIndexOf(userDomain, c.Domains[user]) == -1 {
-					domainAllowed = false
-					break
+	if proxyType == "http" || proxyType == "https" || proxyType == "tcpmux" {
+		if portAllowed {
+			if _, exist := c.Domains[user]; exist {
+				for _, userDomain := range userDomains {
+					if StringIndexOf(userDomain, c.Domains[user]) == -1 {
+						domainAllowed = false
+						break
+					}
 				}
 			}
-		}
-		if !domainAllowed {
-			portErr = fmt.Errorf("user %v domain %v is not allowed", user, userDomains)
-			reject = true
+			if !domainAllowed {
+				portErr = fmt.Errorf("user %v domain %v is not allowed", user, userDomains)
+				reject = true
+			}
 		}
 	}
 
-	subdomainAllowed := false
-	if portAllowed && domainAllowed {
-		if _, exist := c.Subdomains[user]; exist {
-			for _, subdomain := range c.Subdomains[user] {
-				if subdomain == userSubdomain {
-					subdomainAllowed = true
-					break
+	subdomainAllowed := true
+	if proxyType == "http" || proxyType == "https" {
+		subdomainAllowed = false
+		if portAllowed && domainAllowed {
+			if _, exist := c.Subdomains[user]; exist {
+				for _, subdomain := range c.Subdomains[user] {
+					if subdomain == userSubdomain {
+						subdomainAllowed = true
+						break
+					}
 				}
+			} else {
+				subdomainAllowed = true
 			}
-		} else {
-			subdomainAllowed = true
-		}
-		if !subdomainAllowed {
-			portErr = fmt.Errorf("user %v subdomain %v is not allowed", user, userSubdomain)
-			reject = true
+			if !subdomainAllowed {
+				portErr = fmt.Errorf("user %v subdomain %v is not allowed", user, userSubdomain)
+				reject = true
+			}
 		}
 	}
 
