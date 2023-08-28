@@ -126,7 +126,7 @@ func ParseConfigFile(file string) (controller.CommonInfo, map[string]controller.
 
 	keys := usersSection.Keys()
 	for _, key := range keys {
-		var token = controller.TokenInfo{
+		token := controller.TokenInfo{
 			User:    key.Name(),
 			Token:   key.Value(),
 			Comment: key.Comment,
@@ -141,8 +141,9 @@ func ParseConfigFile(file string) (controller.CommonInfo, map[string]controller.
 		return common, nil, nil, nil, nil, iniFile, err
 	}
 	for _, key := range portsSection.Keys() {
-		var user = key.Name()
-		var port = strings.Split(key.Value(), ",")
+		user := key.Name()
+		value := key.Value()
+		port := strings.Split(strings.Replace(value, " ", "", -1), ",")
 		ports[user] = port
 	}
 
@@ -152,8 +153,9 @@ func ParseConfigFile(file string) (controller.CommonInfo, map[string]controller.
 		return common, nil, nil, nil, nil, iniFile, err
 	}
 	for _, key := range domainsSection.Keys() {
-		var user = key.Name()
-		var domain = strings.Split(key.Value(), ",")
+		user := key.Name()
+		value := key.Value()
+		domain := strings.Split(strings.Replace(value, " ", "", -1), ",")
 		domains[user] = domain
 	}
 
@@ -163,8 +165,9 @@ func ParseConfigFile(file string) (controller.CommonInfo, map[string]controller.
 		return common, nil, nil, nil, nil, iniFile, err
 	}
 	for _, key := range subdomainsSection.Keys() {
-		var user = key.Name()
-		var subdomain = strings.Split(key.Value(), ",")
+		user := key.Name()
+		value := key.Value()
+		subdomain := strings.Split(strings.Replace(value, " ", "", -1), ",")
 		subdomains[user] = subdomain
 	}
 
