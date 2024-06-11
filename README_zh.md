@@ -35,6 +35,8 @@ fp-multiuser 会以一个单独的进程运行，并接收 frps 发送过来的 
 
 3. 在 frps 的配置文件中注册插件，并启动。
 
+   INI 格式:
+
     ```
     # frps.ini
     [common]
@@ -46,9 +48,21 @@ fp-multiuser 会以一个单独的进程运行，并接收 frps 发送过来的 
     ops = Login
     ```
 
+   TOML 格式:
+
+    ```toml
+    # frps.toml
+    bindPort = 7000
+
+    [[httpPlugins]]
+    addr = "127.0.0.1:7200"
+    path = "/handler"
+    ops = ["Login"]
+    ```
+
 4. 在 frpc 中指定用户名，在 meta 中指定 token，用户名以及 `meta_token` 的内容需要和之前创建的 token 文件匹配。
 
-    user1 的配置:
+    user1 的配置 INI 格式:
 
     ```
     # frpc.ini
@@ -64,7 +78,21 @@ fp-multiuser 会以一个单独的进程运行，并接收 frps 发送过来的 
     remote_port = 6000
     ```
 
-    user2 的配置:
+    user1 的配置 TOML 格式:
+
+    ```toml
+    serverAddr = "x.x.x.x"
+    serverPort = 7000
+    user = "user1"
+    metadatas.token = "123"
+
+    [[proxies]]
+    type = "tcp"
+    localPort = 22
+    remotePort = 6000
+    ```
+
+    user2 的配置 INI 格式:
 
     ```
     # frpc.ini
@@ -77,5 +105,19 @@ fp-multiuser 会以一个单独的进程运行，并接收 frps 发送过来的 
     [ssh]
     type = tcp
     local_port = 22
-    remote_port = 6000
+    remote_port = 6001
+    ```
+
+    user2 的配置 TOML 格式:
+
+    ```toml
+    serverAddr = "x.x.x.x"
+    serverPort = 7000
+    user = "user2"
+    metadatas.token = "abc"
+
+    [[proxies]]
+    type = "tcp"
+    localPort = 22
+    remotePort = 6001
     ```
