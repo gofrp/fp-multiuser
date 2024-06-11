@@ -35,7 +35,9 @@ frp version >= v0.31.0
 
 3. Register plugin in frps.
 
-    ```
+   INI:
+
+    ```ini
     # frps.ini
     [common]
     bind_port = 7000
@@ -46,11 +48,23 @@ frp version >= v0.31.0
     ops = Login
     ```
 
+    TOML:
+
+    ```toml
+    # frps.toml
+    bindPort = 7000
+
+    [[httpPlugins]]
+    addr = "127.0.0.1:7200"
+    path = "/handler"
+    ops = ["Login"]
+    ```
+
 4. Specify username and meta_token in frpc configure file.
 
-    For user1:
+    For user1 INI:
 
-    ```
+    ```ini
     # frpc.ini
     [common]
     server_addr = x.x.x.x
@@ -64,9 +78,23 @@ frp version >= v0.31.0
     remote_port = 6000
     ```
 
-    For user2:
+    For user1 TOML:
 
+    ```toml
+    serverAddr = "x.x.x.x"
+    serverPort = 7000
+    user = "user1"
+    metadatas.token = "123"
+
+    [[proxies]]
+    type = "tcp"
+    localPort = 22
+    remotePort = 6000
     ```
+
+    For user2 INI:
+
+    ```ini
     # frpc.ini
     [common]
     server_addr = x.x.x.x
@@ -77,5 +105,19 @@ frp version >= v0.31.0
     [ssh]
     type = tcp
     local_port = 22
-    remote_port = 6000
+    remote_port = 6001
+    ```
+
+    For user2 TOML:
+
+    ```toml
+    serverAddr = "x.x.x.x"
+    serverPort = 7000
+    user = "user2"
+    metadatas.token = "abc"
+
+    [[proxies]]
+    type = "tcp"
+    localPort = 22
+    remotePort = 6001
     ```
